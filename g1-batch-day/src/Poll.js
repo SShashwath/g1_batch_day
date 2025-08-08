@@ -1,8 +1,9 @@
 // src/Poll.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import { db } from './firebase';
+import { collection, addDoc } from "firebase/firestore";
 
-// Names extracted from the PDF
 const names = [
   "AR Sivakuhan", "Aadhav Nagaraja", "Aashiq Elahi R", "Abinandhana V",
   "Ahilesh Roy", "Akhil Ramalingar", "Aldric Anto A", "Anbuchandiran K",
@@ -29,6 +30,18 @@ function Poll({ title, description }) {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [reason, setReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
+  // Effect to clear notification after 3 seconds
+  useEffect(() => {
+    if (notification.message) {
+      const timer = setTimeout(() => {
+        setNotification({ message: '', type: '' });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -52,8 +65,37 @@ function Poll({ title, description }) {
     setReason(event.target.value);
   };
 
+  const handleSubmit = async () => {
+    if (!inputValue || !reason) {
+      setNotification({ message: 'Please select a name and provide a reason.', type: 'error' });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, "votes"), {
+        awardTitle: title,
+        votedFor: inputValue,
+        reason: reason,
+        timestamp: new Date()
+      });
+      setNotification({ message: 'Vote submitted successfully!', type: 'success' });
+      setInputValue('');
+      setReason('');
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      setNotification({ message: 'Failed to submit vote. Please try again.', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="poll-container">
+      {notification.message && (
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
       <h2>{title}</h2>
       <p>{description}</p>
       <input
@@ -77,6 +119,9 @@ function Poll({ title, description }) {
         placeholder="Why this person?"
         className="reason-input"
       />
+      <button onClick={handleSubmit} disabled={isSubmitting} className="submit-button">
+        {isSubmitting ? 'Submitting...' : 'Submit Vote'}
+      </button>
     </div>
   );
 }
