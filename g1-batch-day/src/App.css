@@ -45,44 +45,72 @@ p {
 
 /* --- Landing Page Styles --- */
 .landing-container {
-  max-width: 600px;
-  margin: auto;
+  background-color: white;
+  padding: 40px 50px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
 }
 
-.landing-container p {
+.landing-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #34495e;
+  margin-bottom: 10px;
+}
+
+.landing-header p {
   font-size: 1.1rem;
-  margin-bottom: 2.5rem;
+  color: #7f8c8d;
+  margin-bottom: 30px;
 }
 
 .navigation-buttons {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  width: 100%;
+  gap: 15px;
 }
 
 .nav-button {
-  padding: 16px 32px;
+  padding: 15px 20px;
   font-size: 1rem;
   font-weight: 600;
-  border: none;
-  border-radius: 8px;
+  border: 2px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  letter-spacing: 0.5px;
-  background: linear-gradient(145deg, #5a67d8, #4c51bf);
-  color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .nav-button:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(74, 109, 226, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.admin-nav-button {
-  background: linear-gradient(145deg, #4a5568, #2d3748);
+/* Primary Button Style */
+.nav-button {
+  background-color: #3498db;
+  color: white;
 }
+
+.nav-button:hover {
+  background-color: #2980b9;
+}
+
+/* Admin Button Style */
+.admin-nav-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.admin-nav-button:hover {
+  background-color: #c0392b;
+}
+
 
 /* --- General Page & Card Styles --- */
 .page-container {
@@ -91,9 +119,8 @@ p {
 }
 
 .back-button {
-  position: absolute;
-  top: -20px;
-  left: 0;
+  display: inline-block;
+  margin-bottom: 20px;
   padding: 10px 16px;
   background-color: white;
   color: #4a5568;
@@ -215,6 +242,7 @@ p {
   max-width: 800px;
   margin: 0 auto;
   text-align: left;
+  position: relative; /* This will contain the back button */
 }
 
 .result-card {

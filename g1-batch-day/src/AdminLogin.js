@@ -9,7 +9,7 @@ function AdminLogin({ onLoginSuccess, onBack }) {
   const handleLogin = () => {
     // IMPORTANT: This is a simple, insecure way to handle a password.
     // In a real application, you should use a proper authentication system.
-    if (password === 'admin123') {
+    if (password === '2309') {
       onLoginSuccess();
     } else {
       setError('Incorrect password. Please try again.');
