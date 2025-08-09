@@ -4,6 +4,7 @@ import './App.css';
 import AdminDashboard from './AdminDashboard';
 import PollsPage from './PollsPage';
 import QuizPage from './QuizPage';
+import AdminLogin from './AdminLogin'; // Import the new login component
 
 // Landing Page Component
 function LandingPage({ navigate }) {
@@ -18,7 +19,7 @@ function LandingPage({ navigate }) {
         <button onClick={() => navigate('quiz')} className="nav-button">
           Start the Quiz
         </button>
-        <button onClick={() => navigate('admin')} className="nav-button admin-nav-button">
+        <button onClick={() => navigate('adminLogin')} className="nav-button admin-nav-button">
           Admin Dashboard
         </button>
       </div>
@@ -28,17 +29,30 @@ function LandingPage({ navigate }) {
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
   const navigate = (page) => {
     setCurrentPage(page);
+  };
+
+  // This function will be called from AdminLogin on success
+  const handleAdminLogin = () => {
+    setIsAdminAuthenticated(true);
+    navigate('admin');
   };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'polls':
         return <PollsPage onBack={() => navigate('landing')} />;
+      case 'adminLogin':
+        // Show login page if not authenticated
+        return <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} />;
       case 'admin':
-        return <AdminDashboard onBack={() => navigate('landing')} />;
+        // Only show dashboard if authenticated, otherwise show login
+        return isAdminAuthenticated 
+          ? <AdminDashboard onBack={() => navigate('landing')} /> 
+          : <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} />;
       case 'quiz':
         return <QuizPage onBack={() => navigate('landing')} />;
       case 'landing':
