@@ -1,7 +1,7 @@
 // src/QuizPage.js
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import './App.css';
 
 function QuizPage({ onBack }) {
@@ -9,6 +9,8 @@ function QuizPage({ onBack }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
+  const [name, setName] = useState('');
+  const [nameSubmitted, setNameSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -18,7 +20,14 @@ function QuizPage({ onBack }) {
     fetchQuestions();
   }, []);
 
-  const handleAnswerOptionClick = (isCorrect) => {
+  const handleNameSubmit = (e) => {
+    e.preventDefault();
+    if (name.trim()) {
+      setNameSubmitted(true);
+    }
+  };
+
+  const handleAnswerOptionClick = async (isCorrect) => {
     if (isCorrect) {
       setScore(score + 1);
     }
@@ -28,8 +37,37 @@ function QuizPage({ onBack }) {
       setCurrentQuestionIndex(nextQuestion);
     } else {
       setShowScore(true);
+      // Save the score to Firestore
+      await addDoc(collection(db, "scores"), {
+        name: name,
+        score: score + (isCorrect ? 1 : 0),
+        timestamp: new Date()
+      });
     }
   };
+
+  if (!nameSubmitted) {
+    return (
+      <div className="page-container">
+        <button onClick={onBack} className="back-button">← Back to Home</button>
+        <h1>Enter Your Name</h1>
+        <div className="quiz-card">
+          <form onSubmit={handleNameSubmit}>
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
+            />
+            <button type="submit" className="submit-button">Start Quiz</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="page-container">
@@ -42,7 +80,7 @@ function QuizPage({ onBack }) {
           </div>
         ) : (
           <>
-            {questions.length > 0 &&
+            {questions.length > 0 && currentQuestionIndex < questions.length ?
               <>
                 <div className='question-section'>
                   <div className='question-count'>
@@ -56,6 +94,7 @@ function QuizPage({ onBack }) {
                   ))}
                 </div>
               </>
+              : <p>Loading quiz...</p>
             }
           </>
         )}

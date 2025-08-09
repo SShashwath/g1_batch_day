@@ -11,6 +11,7 @@ function AdminDashboard({ onBack }) {
   const [results, setResults] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
+  const [scores, setScores] = useState([]);
   const [newQuestion, setNewQuestion] = useState({
     question: '',
     options: ['', '', '', ''],
@@ -54,8 +55,14 @@ function AdminDashboard({ onBack }) {
       setQuestions(questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
 
+    const fetchScores = async () => {
+        const scoresSnapshot = await getDocs(collection(db, "scores"));
+        setScores(scoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+
     fetchVotes();
     fetchQuestions();
+    fetchScores();
   }, []);
 
   const handleQuestionChange = (e) => {
@@ -144,6 +151,26 @@ function AdminDashboard({ onBack }) {
             <button onClick={() => handleDeleteQuestion(q.id)} style={{ float: 'right' }}>Delete</button>
           </div>
         ))}
+      </div>
+
+       <div className="result-card">
+        <h3>Quiz Scores</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {scores.map(score => (
+              <tr key={score.id}>
+                <td>{score.name}</td>
+                <td>{score.score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
 
