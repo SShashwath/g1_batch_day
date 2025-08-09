@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
@@ -10,13 +10,19 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 function AdminDashboard({ onBack }) {
   const [results, setResults] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [questions, setQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState({
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: ''
+  });
 
   useEffect(() => {
     const fetchVotes = async () => {
       try {
         const votesSnapshot = await getDocs(collection(db, "votes"));
         const votes = votesSnapshot.docs.map(doc => doc.data());
-        
+
         const voteCounts = votes.reduce((acc, vote) => {
           const { awardTitle, votedFor } = vote;
           if (!acc[awardTitle]) {
@@ -43,8 +49,45 @@ function AdminDashboard({ onBack }) {
       }
     };
 
+    const fetchQuestions = async () => {
+      const questionsSnapshot = await getDocs(collection(db, "quiz"));
+      setQuestions(questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    };
+
     fetchVotes();
+    fetchQuestions();
   }, []);
+
+  const handleQuestionChange = (e) => {
+    setNewQuestion({ ...newQuestion, question: e.target.value });
+  };
+
+  const handleOptionChange = (index, value) => {
+    const options = [...newQuestion.options];
+    options[index] = value;
+    setNewQuestion({ ...newQuestion, options });
+  };
+
+  const handleCorrectAnswerChange = (e) => {
+    setNewQuestion({ ...newQuestion, correctAnswer: e.target.value });
+  };
+
+  const handleAddQuestion = async () => {
+    if (!newQuestion.question || newQuestion.options.some(opt => !opt) || !newQuestion.correctAnswer) {
+      alert("Please fill out all fields");
+      return;
+    }
+    await addDoc(collection(db, "quiz"), newQuestion);
+    setNewQuestion({ question: '', options: ['', '', '', ''], correctAnswer: '' });
+    const questionsSnapshot = await getDocs(collection(db, "quiz"));
+    setQuestions(questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  };
+
+  const handleDeleteQuestion = async (id) => {
+    await deleteDoc(doc(db, "quiz", id));
+    setQuestions(questions.filter(q => q.id !== id));
+  };
+
 
   const chartOptions = {
     responsive: true,
@@ -63,6 +106,47 @@ function AdminDashboard({ onBack }) {
     <div className="dashboard-container">
       <button onClick={onBack} className="back-button">← Back to Home</button>
       <h1>Admin Dashboard</h1>
+
+      <div className="result-card">
+        <h3>Add Quiz Question</h3>
+        <input
+          type="text"
+          placeholder="Question"
+          value={newQuestion.question}
+          onChange={handleQuestionChange}
+          style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
+        />
+        {newQuestion.options.map((option, index) => (
+          <input
+            key={index}
+            type="text"
+            placeholder={`Option ${index + 1}`}
+            value={option}
+            onChange={(e) => handleOptionChange(index, e.target.value)}
+            style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
+          />
+        ))}
+        <input
+          type="text"
+          placeholder="Correct Answer"
+          value={newQuestion.correctAnswer}
+          onChange={handleCorrectAnswerChange}
+          style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
+        />
+        <button onClick={handleAddQuestion} className="submit-button">Add Question</button>
+      </div>
+
+      <div className="result-card">
+        <h3>Existing Questions</h3>
+        {questions.map((q) => (
+          <div key={q.id} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
+            <p>{q.question}</p>
+            <button onClick={() => handleDeleteQuestion(q.id)} style={{ float: 'right' }}>Delete</button>
+          </div>
+        ))}
+      </div>
+
+
       {isLoading ? (
         <p>Loading results...</p>
       ) : (
@@ -92,4 +176,3 @@ function AdminDashboard({ onBack }) {
 }
 
 export default AdminDashboard;
-
