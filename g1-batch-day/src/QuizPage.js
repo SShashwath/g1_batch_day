@@ -10,7 +10,7 @@ function QuizPage({ onBack }) {
   const [showScore, setShowScore] = useState(false);
   const [name, setName] = useState('');
   const [nameSubmitted, setNameSubmitted] = useState(false);
-  const [timer, setTimer] = useState(20);
+  const [timer, setTimer] = useState(15);
   const [quizActive, setQuizActive] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ function QuizPage({ onBack }) {
     const nextQuestion = currentQuestionIndex + 1;
     if (nextQuestion < questions.length) {
       setCurrentQuestionIndex(nextQuestion);
-      setTimer(20);
+      setTimer(15);
     } else {
       setShowScore(true);
       addDoc(collection(db, "scores"), {
