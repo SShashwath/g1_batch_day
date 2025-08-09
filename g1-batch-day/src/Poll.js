@@ -4,14 +4,14 @@ import './App.css';
 const names = [
   "AR Sivakuhan", "Aadhav Nagaraja", "Aashiq Elahi R", "Abinandhana V",
   "Ahilesh Roy", "Akhil Ramalingar", "Aldric Anto A", "Anbuchandiran K",
-  "Anto Francis Var", "Arunmozhivarma", "Ashwin Tom", "Balachandran I",
+  "Anto Francis Varsha", "Arunmozhivarma", "Ashwin Tom", "Balachandran I",
   "Bharath Ragav S", "Bommuraj E", "Chandra K", "Chinthiya E", "Dharshana S",
   "Divakaran A", "Eswari S", "Gandhimathi B", "Ganesh V", "Gautam Kumar M",
   "Gobiraj D", "Gokul krishna", "Gowtham V", "Harini P", "Hemashri S",
   "Jeyaprakash J", "KS Nithish Kumar", "Kanishka AC", "Kavinsharvesh S",
   "Keerthanasree I", "Keerti Dhanyaa F", "Lisha V", "Mohammed Fazal",
   "Mohan Prasath M", "Naghulan Sivam", "Narayanan", "Naveenasri R",
-  "Neelesh Padmar", "Nikhil Kannan", "Nitish Balamurali", "Nivetha",
+  "Neelesh ", "Nikhil Kannan", "Nitish Balamurali", "Nivetha",
   "Padmawathy S", "Pranav A", "Preethi Reena S", "Prem Raj T", "Priyadharshini K",
   "Ratnesh", "Rechivarthini S K", "Richitha Elango", "Ridhu Shree VS", "Rithanya S",
   "S S Pramodh", "Sandhiya S", "Sanjeev R K", "Sanjith Harshan", "Saravana Kumar",
@@ -20,7 +20,7 @@ const names = [
   "Sowndarya Elango", "Srinath M", "Srinithi Srinivasa", "Sruthi A",
   "Therdhana JP", "Thrisha", "Varsha", "Vetriselvan V", "Vishnu S",
   "Vishnu Preethi G", "Yogesh T", "Harish V", "Akhil MG", "Desigaa R",
-  "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B"
+  "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B","Venkatraman"
 ];
 
 function Poll({ title, description, selectedValue, onValueChange }) {
