@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
@@ -12,6 +12,8 @@ function AdminDashboard({ onBack }) {
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
   const [scores, setScores] = useState([]);
+  const [quizActive, setQuizActive] = useState(false);
+  const [pollingActive, setPollingActive] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     question: '',
     options: ['', '', '', ''],
@@ -19,6 +21,16 @@ function AdminDashboard({ onBack }) {
   });
 
   useEffect(() => {
+    const fetchStatus = async () => {
+      const statusDoc = await getDocs(collection(db, "status"));
+      if (!statusDoc.empty) {
+        const statusData = statusDoc.docs[0].data();
+        setQuizActive(statusData.quizActive);
+        setPollingActive(statusData.pollingActive);
+      }
+    };
+
+
     const fetchVotes = async () => {
       try {
         const votesSnapshot = await getDocs(collection(db, "votes"));
@@ -59,7 +71,8 @@ function AdminDashboard({ onBack }) {
         const scoresSnapshot = await getDocs(collection(db, "scores"));
         setScores(scoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }
-
+    
+    fetchStatus();
     fetchVotes();
     fetchQuestions();
     fetchScores();
@@ -94,6 +107,18 @@ function AdminDashboard({ onBack }) {
     await deleteDoc(doc(db, "quiz", id));
     setQuestions(questions.filter(q => q.id !== id));
   };
+  
+  const toggleQuiz = async () => {
+    const newQuizStatus = !quizActive;
+    setQuizActive(newQuizStatus);
+    await setDoc(doc(db, "status", "appStatus"), { quizActive: newQuizStatus, pollingActive }, { merge: true });
+  };
+
+  const togglePolling = async () => {
+    const newPollingStatus = !pollingActive;
+    setPollingActive(newPollingStatus);
+    await setDoc(doc(db, "status", "appStatus"), { pollingActive: newPollingStatus, quizActive }, { merge: true });
+  };
 
 
   const chartOptions = {
@@ -113,6 +138,12 @@ function AdminDashboard({ onBack }) {
     <div className="dashboard-container">
       <button onClick={onBack} className="back-button">← Back to Home</button>
       <h1>Admin Dashboard</h1>
+
+      <div className="result-card">
+        <h3>Controls</h3>
+        <button onClick={toggleQuiz} className="submit-button">{quizActive ? 'Stop Quiz' : 'Start Quiz'}</button>
+        <button onClick={togglePolling} className="submit-button" style={{marginTop: '10px'}}>{pollingActive ? 'End Polling' : 'Start Polling'}</button>
+      </div>
 
       <div className="result-card">
         <h3>Add Quiz Question</h3>

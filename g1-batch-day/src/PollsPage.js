@@ -1,9 +1,9 @@
 // src/PollsPage.js
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './App.css';
 import Poll from './Poll';
 import { db } from './firebase';
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 
 const awards = [
   { title: "Mr./Ms. Always Late", description: "Makes grand entrances to class — usually after roll call." },
@@ -24,7 +24,7 @@ const awards = [
   { title: "The Motivator", description: "Pushes others to do better, even when they’re ready to give up." },
   { title: "Best Smile", description: "Their smile works like Ctrl+Z for a bad day." },
   { title: "Fashion Icon", description: "No repeat outfits. Always ready for an insta story." },
-  { title: "Chameleon Award 🦎", description: "Jumps from one group to another. Adapt to everyone." },
+  { title: "Chameleon Award 🦎", description: "Jumps from one group to another depending on their need. Adapt to everyone." },
   { title: "Egoless Friend of the Class", description: "Helps everyone without expecting anything in return — pure hearted and drama-free." }
 ];
 
@@ -32,6 +32,17 @@ function PollsPage({ onBack }) {
   const [votes, setVotes] = useState(Array(awards.length).fill(''));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState('');
+  const [pollingActive, setPollingActive] = useState(true);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const statusDoc = await getDocs(collection(db, "status"));
+      if (!statusDoc.empty) {
+        setPollingActive(statusDoc.docs[0].data().pollingActive);
+      }
+    };
+    fetchStatus();
+  }, []);
 
   const handleVoteChange = (index, value) => {
     const newVotes = [...votes];
@@ -77,6 +88,15 @@ function PollsPage({ onBack }) {
       setIsSubmitting(false);
     }
   };
+
+  if (!pollingActive) {
+    return (
+      <div className="page-container">
+        <button onClick={onBack} className="back-button">← Back to Home</button>
+        <h1>Polling has ended.</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
