@@ -1,8 +1,5 @@
-// src/Poll.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import { db } from './firebase';
-import { collection, addDoc } from "firebase/firestore";
 
 const names = [
   "AR Sivakuhan", "Aadhav Nagaraja", "Aashiq Elahi R", "Abinandhana V",
@@ -26,26 +23,12 @@ const names = [
   "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B"
 ];
 
-function Poll({ title, description }) {
-  const [inputValue, setInputValue] = useState('');
+function Poll({ title, description, selectedValue, onValueChange }) {
   const [suggestions, setSuggestions] = useState([]);
-  const [reason, setReason] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState({ message: '', type: '' });
-
-  // Effect to clear notification after 3 seconds
-  useEffect(() => {
-    if (notification.message) {
-      const timer = setTimeout(() => {
-        setNotification({ message: '', type: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
 
   const handleInputChange = (event) => {
     const value = event.target.value;
-    setInputValue(value);
+    onValueChange(value); // Update parent state
     if (value.length > 0) {
       const filteredSuggestions = names.filter(name =>
         name.toLowerCase().startsWith(value.toLowerCase())
@@ -57,50 +40,17 @@ function Poll({ title, description }) {
   };
 
   const handleSuggestionClick = (name) => {
-    setInputValue(name);
+    onValueChange(name); // Update parent state
     setSuggestions([]);
-  };
-
-  const handleReasonChange = (event) => {
-    setReason(event.target.value);
-  };
-
-  const handleSubmit = async () => {
-    if (!inputValue || !reason) {
-      setNotification({ message: 'Please select a name and provide a reason.', type: 'error' });
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, "votes"), {
-        awardTitle: title,
-        votedFor: inputValue,
-        reason: reason,
-        timestamp: new Date()
-      });
-      setNotification({ message: 'Vote submitted successfully!', type: 'success' });
-      setInputValue('');
-      setReason('');
-    } catch (error) {
-      console.error("Error adding document: ", error);
-      setNotification({ message: 'Failed to submit vote. Please try again.', type: 'error' });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
     <div className="poll-container">
-      {notification.message && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
-      )}
       <h2>{title}</h2>
       <p>{description}</p>
       <input
         type="text"
-        value={inputValue}
+        value={selectedValue}
         onChange={handleInputChange}
         placeholder="Enter a name..."
       />
@@ -113,15 +63,6 @@ function Poll({ title, description }) {
           ))}
         </ul>
       )}
-      <textarea
-        value={reason}
-        onChange={handleReasonChange}
-        placeholder="Why this person?"
-        className="reason-input"
-      />
-      <button onClick={handleSubmit} disabled={isSubmitting} className="submit-button">
-        {isSubmitting ? 'Submitting...' : 'Submit Vote'}
-      </button>
     </div>
   );
 }
