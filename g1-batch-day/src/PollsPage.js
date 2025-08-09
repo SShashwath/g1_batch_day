@@ -24,7 +24,7 @@ const awards = [
   { title: "The Motivator", description: "Pushes others to do better, even when they’re ready to give up." },
   { title: "Best Smile", description: "Their smile works like Ctrl+Z for a bad day." },
   { title: "Fashion Icon", description: "No repeat outfits. Always ready for an insta story." },
-  { title: "Chameleon Award 🦎", description: "Jumps from one group to another depending on their need. Adapt to everyone." },
+  { title: "Chameleon Award 🦎", description: "Jumps from one group to another. Adapt to everyone." },
   { title: "Egoless Friend of the Class", description: "Helps everyone without expecting anything in return — pure hearted and drama-free." }
 ];
 
