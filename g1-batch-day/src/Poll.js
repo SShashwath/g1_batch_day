@@ -20,7 +20,7 @@ const names = [
   "Sowndarya Elango", "Srinath M", "Srinithi Srinivasa", "Sruthi A",
   "Therdhana JP", "Thrisha", "Varsha", "Vetriselvan V", "Vishnu S",
   "Vishnu Preethi G", "Yogesh T", "Harish V", "Akhil MG", "Desigaa R",
-  "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B","Venkatraman"
+  "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B"
 ];
 
 function Poll({ title, description, selectedValue, onValueChange }) {

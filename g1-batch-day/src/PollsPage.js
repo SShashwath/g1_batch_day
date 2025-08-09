@@ -1,9 +1,30 @@
-// src/PollsPage.js
 import React, { useState, useMemo, useEffect } from 'react';
 import './App.css';
 import Poll from './Poll';
 import { db } from './firebase';
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+
+const names = [
+  "AR Sivakuhan", "Aadhav Nagaraja", "Aashiq Elahi R", "Abinandhana V",
+  "Ahilesh Roy", "Akhil Ramalingar", "Aldric Anto A", "Anbuchandiran K",
+  "Anto Francis Var", "Arunmozhivarma", "Ashwin Tom", "Balachandran I",
+  "Bharath Ragav S", "Bommuraj E", "Chandra K", "Chinthiya E", "Dharshana S",
+  "Divakaran A", "Eswari S", "Gandhimathi B", "Ganesh V", "Gautam Kumar M",
+  "Gobiraj D", "Gokul krishna", "Gowtham V", "Harini P", "Hemashri S",
+  "Jeyaprakash J", "KS Nithish Kumar", "Kanishka AC", "Kavinsharvesh S",
+  "Keerthanasree I", "Keerti Dhanyaa F", "Lisha V", "Mohammed Fazal",
+  "Mohan Prasath M", "Naghulan Sivam", "Narayanan", "Naveenasri R",
+  "Neelesh Padmar", "Nikhil Kannan", "Nitish Balamurali", "Nivetha",
+  "Padmawathy S", "Pranav A", "Preethi Reena S", "Prem Raj T", "Priyadharshini K",
+  "Ratnesh", "Rechivarthini S K", "Richitha Elango", "Ridhu Shree VS", "Rithanya S",
+  "S S Pramodh", "Sandhiya S", "Sanjeev R K", "Sanjith Harshan", "Saravana Kumar",
+  "Saumiyaa Sri V L", "Shanmithaa", "Shree Shanthi M", "Shreyaa Vijayakumar",
+  "Sindhu Kalyani M", "Sindhu Vardhini I", "Sobanarani S M", "Soniya J",
+  "Sowndarya Elango", "Srinath M", "Srinithi Srinivasa", "Sruthi A",
+  "Therdhana JP", "Thrisha", "Varsha", "Vetriselvan V", "Vishnu S",
+  "Vishnu Preethi G", "Yogesh T", "Harish V", "Akhil MG", "Desigaa R",
+  "Mughilan R", "Sarvesh", "Velumani S", "Vijaya Ragavan I", "Yashwanth B"
+];
 
 const awards = [
   { title: "Mr./Ms. Always Late", description: "Makes grand entrances to class — usually after roll call." },
@@ -33,6 +54,11 @@ function PollsPage({ onBack }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState('');
   const [pollingActive, setPollingActive] = useState(true);
+  const [name, setName] = useState('');
+  const [nameSubmitted, setNameSubmitted] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [alreadyVoted, setAlreadyVoted] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -54,6 +80,44 @@ function PollsPage({ onBack }) {
     return votes.every(vote => vote.trim() !== '');
   }, [votes]);
 
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setName(value);
+    if (value.length > 0) {
+      const filteredSuggestions = names.filter(name =>
+        name.toLowerCase().startsWith(value.toLowerCase())
+      );
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  };
+  
+  const handleSuggestionClick = (name) => {
+    setName(name);
+    setSuggestions([]);
+  };
+
+  const handleNameSubmit = async (e) => {
+    e.preventDefault();
+    if (!names.includes(name)) {
+      alert("Name not found in the list.");
+      return;
+    }
+    
+    setIsChecking(true);
+    const votesQuery = query(collection(db, "votes"), where("voter", "==", name));
+    const querySnapshot = await getDocs(votesQuery);
+
+    if (!querySnapshot.empty) {
+      setAlreadyVoted(true);
+    } else {
+      setNameSubmitted(true);
+    }
+    setIsChecking(false);
+  };
+
+
   const handleSubmitAll = async () => {
     if (!allPollsFilled) {
       setNotification('Please fill out all award nominations before submitting.');
@@ -70,6 +134,7 @@ function PollsPage({ onBack }) {
         const voteData = {
           awardTitle: award.title,
           votedFor: votes[index],
+          voter: name,
           timestamp: new Date()
         };
         return addDoc(votesCollection, voteData);
@@ -78,7 +143,10 @@ function PollsPage({ onBack }) {
       await Promise.all(promises);
 
       setNotification('All votes submitted successfully!');
-      setTimeout(() => setNotification(''), 3000);
+      setTimeout(() => {
+          setNotification('');
+          setAlreadyVoted(true); // Prevent re-voting after successful submission
+      }, 3000);
       setVotes(Array(awards.length).fill('')); // Reset form
     } catch (error) {
       console.error("Error submitting votes: ", error);
@@ -97,6 +165,49 @@ function PollsPage({ onBack }) {
       </div>
     );
   }
+  
+  if (alreadyVoted) {
+    return (
+        <div className="page-container">
+            <button onClick={onBack} className="back-button">← Back to Home</button>
+            <h1>You have already voted.</h1>
+        </div>
+    );
+  }
+
+  if (!nameSubmitted) {
+    return (
+      <div className="page-container">
+        <button onClick={onBack} className="back-button">← Back to Home</button>
+        <h1>Enter Your Name to Vote</h1>
+        <div className="quiz-card">
+          <form onSubmit={handleNameSubmit}>
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={name}
+              onChange={handleNameChange}
+              required
+              style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
+            />
+            {suggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {suggestions.map((name, index) => (
+                    <li key={index} onClick={() => handleSuggestionClick(name)}>
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            <button type="submit" className="submit-button" disabled={isChecking}>
+              {isChecking ? 'Checking...' : 'Start Voting'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="page-container">
