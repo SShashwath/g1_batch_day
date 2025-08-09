@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import './App.css';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function AdminDashboard({ onBack }) {
   const [results, setResults] = useState({});
@@ -14,6 +10,7 @@ function AdminDashboard({ onBack }) {
   const [scores, setScores] = useState([]);
   const [quizActive, setQuizActive] = useState(false);
   const [pollingActive, setPollingActive] = useState(false);
+  const [totalVoters, setTotalVoters] = useState(0);
   const [newQuestion, setNewQuestion] = useState({
     question: '',
     options: ['', '', '', ''],
@@ -35,6 +32,10 @@ function AdminDashboard({ onBack }) {
       try {
         const votesSnapshot = await getDocs(collection(db, "votes"));
         const votes = votesSnapshot.docs.map(doc => doc.data());
+        
+        // Assuming 20 awards, so total votes / 20 is the number of voters.
+        // A better approach would be to have a separate collection for voters.
+        setTotalVoters(votesSnapshot.size / 20);
 
         const voteCounts = votes.reduce((acc, vote) => {
           const { awardTitle, votedFor } = vote;
@@ -120,20 +121,6 @@ function AdminDashboard({ onBack }) {
     await setDoc(doc(db, "status", "appStatus"), { pollingActive: newPollingStatus, quizActive }, { merge: true });
   };
 
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Vote Counts',
-      },
-    },
-  };
-
   return (
     <div className="dashboard-container">
       <button onClick={onBack} className="back-button">← Back to Home</button>
@@ -204,31 +191,32 @@ function AdminDashboard({ onBack }) {
         </table>
       </div>
 
-
-      {isLoading ? (
-        <p>Loading results...</p>
-      ) : (
-        Object.keys(results).length === 0 ? <p>No votes have been submitted yet.</p> :
-        Object.entries(results).map(([awardTitle, votes], index) => {
-          const chartData = {
-            labels: votes.map(([name]) => name),
-            datasets: [
-              {
-                label: 'Votes',
-                data: votes.map(([, count]) => count),
-                backgroundColor: 'rgba(74, 144, 226, 0.6)',
-              },
-            ],
-          };
-
-          return (
-            <div key={index} className="result-card">
-              <h3>{awardTitle}</h3>
-              <Bar options={chartOptions} data={chartData} />
-            </div>
-          );
-        })
-      )}
+      <div className="result-card">
+        <h3>Polling Results</h3>
+        {isLoading ? (
+          <p>Loading results...</p>
+        ) : (
+          <>
+            <p>Total number of voters: {totalVoters}</p>
+            {Object.keys(results).length === 0 ? <p>No votes have been submitted yet.</p> :
+            Object.entries(results).map(([awardTitle, votes], index) => {
+              return (
+                <div key={index} className="result-card">
+                  <h4>{awardTitle}</h4>
+                  <ul>
+                    {votes.map(([name, count], voteIndex) => (
+                      <li key={name} style={voteIndex < 5 ? { backgroundColor: 'gold' } : {}}>
+                        <span>{name}</span>
+                        <span>{count} vote(s)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
     </div>
   );
 }
