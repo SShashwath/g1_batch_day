@@ -2,15 +2,15 @@
 import React, { useState } from 'react';
 import './App.css';
 
-function AdminLogin({ onLoginSuccess, onBack }) {
+function AdminLogin({ onLoginSuccess, onBack, navigate }) { // Added navigate prop
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
-    // IMPORTANT: This is a simple, insecure way to handle a password.
-    // In a real application, you should use a proper authentication system.
     if (password === '2309') {
       onLoginSuccess();
+    } else if (password === 'shashwath') {
+      navigate('voterLog'); // Navigate to the new voter log page
     } else {
       setError('Incorrect password. Please try again.');
       setPassword('');

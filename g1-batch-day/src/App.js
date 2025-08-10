@@ -5,6 +5,7 @@ import AdminDashboard from './AdminDashboard';
 import PollsPage from './PollsPage';
 import QuizPage from './QuizPage';
 import AdminLogin from './AdminLogin'; // Import the new login component
+import VoterLogPage from './VoterLogPage'; // Import the new VoterLogPage component
 
 // Landing Page Component
 function LandingPage({ navigate }) {
@@ -47,14 +48,16 @@ function App() {
         return <PollsPage onBack={() => navigate('landing')} />;
       case 'adminLogin':
         // Show login page if not authenticated
-        return <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} />;
+        return <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} navigate={navigate} />;
       case 'admin':
         // Only show dashboard if authenticated, otherwise show login
-        return isAdminAuthenticated 
-          ? <AdminDashboard onBack={() => navigate('landing')} /> 
-          : <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} />;
+        return isAdminAuthenticated
+          ? <AdminDashboard onBack={() => navigate('landing')} />
+          : <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} navigate={navigate} />;
       case 'quiz':
         return <QuizPage onBack={() => navigate('landing')} />;
+      case 'voterLog': // Added new case for voterLog
+        return <VoterLogPage onBack={() => navigate('landing')} />;
       case 'landing':
       default:
         return <LandingPage navigate={navigate} />;
