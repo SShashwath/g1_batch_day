@@ -2,32 +2,33 @@
 import React, { useState, useMemo } from 'react';
 import { db } from './firebase';
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { names } from './names'; // Import the centralized list of names
 import './App.css';
 import './FinalPoll.css';
 
-// Finalists based on the provided poll results from all images
 const finalists = {
   "Mr./Ms. Always Late": ["Sanjith Harshan", "Nikhil Kannan", "Neelesh", "Yogesh T", "Gautam Kumar M", "Saravana Kumar"],
   "Backbencher Boss": ["Nikhil Kannan", "Ganesh V", "Gautam Kumar M", "Abinandhana V", "Sanjith Harshan"],
   "The Walking Google": ["Mohan Prasath M", "Saravana Kumar", "Sanjeev R K", "Aadhav Nagaraja", "Shree Shanthi M"],
   "Unsung Hero / Heroine": ["Narayanan", "Harini P", "Kanishka AC", "Keerti Dhanyaa F", "Sarvesh"],
   "Sleeper Hit": ["Gautam Kumar M", "Saravana Kumar", "Shanmithaa", "Bommuraj E", "Nikhil Kannan", "Ratnesh"],
-  "Kalakkal Comedian": ["Sanjith Harshan", "Gautam Kumar M", "Nikhil Kannan", "Neelesh", "Saumiyaa Sri V L"],
-  "Flash Entry": ["Pranav A", "Nikhil Kannan", "KS Nithish Kumar", "Srinath M", "Nitish Balamurali", "Rithanya S"],
+  "Kalakkal Comedian": ["Sanjith Harshan", "Gautam Kumar M", "Nikhil Kannan", "Neelesh", "Saumiyaa Sri V L","Sindhu Vardhini I"],
+  "Flash Entry": ["Pranav A", "Nikhil Kannan", "KS Nithish Kumar", "Srinath M", "Nitish Balamurali", "Rithanya S","Nivetha"],
   "Lab Partner Goals": ["Nikhil Kannan", "Richitha Elango", "Narayanan", "Akhil Ramalingar", "Lisha V"],
   "Assignment Copy Center": ["Mohan Prasath M", "Gandhimathi B", "Keerti Dhanyaa F", "Preethi Reena S", "Srinithi Srinivasa"],
-  "The Helping Hand": ["Narayanan", "Nikhil Kannan", "S S Pramodh", "Prem Raj T", "Kanishka AC"],
+  "The Helping Hand": ["Narayanan", "Nikhil Kannan", "S S Pramodh", "Prem Raj T", "Kanishka AC","Dharshana"],
   "Silent Achiever": ["Pranav A", "Mohan Prasath M", "Jeyaprakash J", "Saravana Kumar", "Aadhav Nagaraja"],
-  "Team Spirit Award": ["Kanishka AC", "Sanjeev R K", "Ahilesh Roy", "Richitha Elango", "Ratnesh"],
+  "Team Spirit Award": ["Kanishka AC", "Sanjeev R K", "Ahilesh Roy", "Richitha Elango", "Ratnesh","Priya Dharshini"],
   "Creative Mind": ["Narayanan", "Harini P", "Saumiyaa Sri V L", "Nikhil Kannan", "Ashwin Tom"],
   "Born Leader": ["Narayanan", "Harini P", "Kanishka AC", "Nikhil Kannan", "Anbuchandiran K"],
-  "Kindest Soul": ["Thrisha", "Pranav A", "Aadhav Nagaraja", "Rithanya S", "Sanjeev R K"],
+  "Kindest Soul": ["Thrisha", "Pranav A", "Aadhav Nagaraja", "Rithanya S", "Sanjeev R K","Chandra"],
   "The Motivator": ["Sanjeev R K", "Eswari S", "Mohammed Fazal", "Kanishka AC", "Ratnesh", "Chinthiya E", "Sindhu Vardhini I"],
-  "Best Smile": ["Thrisha", "Pranav A", "Abinandhana V", "Rithanya S", "Narayanan"],
+  "Best Smile": ["Thrisha", "Pranav A", "Abinandhana V", "Rithanya S", "Narayanan","Sindhu Kalyani"],
   "Fashion Icon": ["Shreyaa Vijayakumar", "Shanmithaa", "Abinandhana V", "Thrisha", "Ridhu Shree VS"],
   "Chameleon Award 🦎": ["Anbuchandiran K", "Divakaran A", "Neelesh", "Ashwin Tom", "Nikhil Kannan"],
   "Egoless Friend of the Class": ["Narayanan", "Preethi Reena S", "Chandra K", "Prem Raj T", "Nikhil Kannan"]
 };
+
 
 const awards = [
   { title: "Mr./Ms. Always Late", description: "Makes grand entrances to class — usually after roll call." },
@@ -56,13 +57,35 @@ function FinalPollPage({ onBack }) {
   const [votes, setVotes] = useState(Array(awards.length).fill(''));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState('');
+  
+  // States for name input and suggestions
   const [name, setName] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isNameSelected, setIsNameSelected] = useState(false);
+
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Filter awards to only those with finalists
   const awardsWithFinalists = useMemo(() => awards.filter(award => finalists[award.title] && finalists[award.title].length > 0), []);
+
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setName(value);
+    setIsNameSelected(false);
+    if (value.length > 0) {
+      const regex = new RegExp(`^${value}`, 'i');
+      setSuggestions(names.sort().filter(v => regex.test(v)));
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setName(suggestion);
+    setSuggestions([]);
+    setIsNameSelected(true);
+  };
 
   const handleVoteChange = (index, value) => {
     const newVotes = [...votes];
@@ -76,6 +99,10 @@ function FinalPollPage({ onBack }) {
 
   const handleNameSubmit = async (e) => {
     e.preventDefault();
+    if (!isNameSelected) {
+        alert("Please select your name from the list.");
+        return;
+    }
     setIsChecking(true);
     const votesQuery = query(collection(db, "final_votes"), where("voter", "==", name));
     const querySnapshot = await getDocs(votesQuery);
@@ -147,11 +174,21 @@ function FinalPollPage({ onBack }) {
               type="text"
               placeholder="Your Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
+              autoComplete="off"
               required
               style={{ marginBottom: '10px', width: '100%', padding: '8px' }}
             />
-            <button type="submit" className="submit-button" disabled={isChecking}>
+             {suggestions.length > 0 && (
+              <div className="suggestions-list">
+                {suggestions.map((suggestion, index) => (
+                  <div key={index} onClick={() => handleSuggestionClick(suggestion)} className="suggestion-item">
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button type="submit" className="submit-button" disabled={isChecking || !isNameSelected}>
               {isChecking ? 'Checking...' : 'Start Final Voting'}
             </button>
           </form>
