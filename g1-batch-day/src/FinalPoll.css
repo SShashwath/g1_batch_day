@@ -1,0 +1,41 @@
+/* src/FinalPoll.css */
+.final-poll-container {
+  background-color: #ffffff;
+  padding: 2rem;
+  width: 90%;
+  max-width: 550px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin: 0 auto 1.5rem auto;
+  text-align: left;
+}
+
+.final-poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.final-poll-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.final-poll-label:hover {
+  background-color: #f7fafc;
+}
+
+.final-poll-label input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}

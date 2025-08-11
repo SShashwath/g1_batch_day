@@ -4,8 +4,9 @@ import './App.css';
 import AdminDashboard from './AdminDashboard';
 import PollsPage from './PollsPage';
 import QuizPage from './QuizPage';
-import AdminLogin from './AdminLogin'; // Import the new login component
-import VoterLogPage from './VoterLogPage'; // Import the new VoterLogPage component
+import AdminLogin from './AdminLogin';
+import VoterLogPage from './VoterLogPage';
+import FinalPollPage from './FinalPollPage'; // Import the new final poll component
 
 // Landing Page Component
 function LandingPage({ navigate }) {
@@ -15,7 +16,10 @@ function LandingPage({ navigate }) {
       <p>Choose an activity</p>
       <div className="navigation-buttons">
         <button onClick={() => navigate('polls')} className="nav-button">
-          Vote for Awards
+          Vote for Awards (Round 1)
+        </button>
+        <button onClick={() => navigate('final-polls')} className="nav-button">
+          Final Voting
         </button>
         <button onClick={() => navigate('quiz')} className="nav-button">
           Start the Quiz
@@ -46,6 +50,8 @@ function App() {
     switch (currentPage) {
       case 'polls':
         return <PollsPage onBack={() => navigate('landing')} />;
+      case 'final-polls':
+        return <FinalPollPage onBack={() => navigate('landing')} />;
       case 'adminLogin':
         // Show login page if not authenticated
         return <AdminLogin onLoginSuccess={handleAdminLogin} onBack={() => navigate('landing')} navigate={navigate} />;

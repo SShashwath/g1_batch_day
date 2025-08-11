@@ -5,6 +5,7 @@ import './App.css';
 
 function AdminDashboard({ onBack }) {
   const [results, setResults] = useState({});
+  const [finalResults, setFinalResults] = useState({}); // State for final poll results
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
   const [scores, setScores] = useState([]);
@@ -18,65 +19,72 @@ function AdminDashboard({ onBack }) {
   });
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      const statusDoc = await getDocs(collection(db, "status"));
-      if (!statusDoc.empty) {
-        const statusData = statusDoc.docs[0].data();
-        setQuizActive(statusData.quizActive);
-        setPollingActive(statusData.pollingActive);
-      }
-    };
-
-
-    const fetchVotes = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
+        // Fetch Status
+        const statusDoc = await getDocs(collection(db, "status"));
+        if (!statusDoc.empty) {
+          const statusData = statusDoc.docs[0].data();
+          setQuizActive(statusData.quizActive);
+          setPollingActive(statusData.pollingActive);
+        }
+
+        // Fetch Initial Votes
         const votesSnapshot = await getDocs(collection(db, "votes"));
         const votes = votesSnapshot.docs.map(doc => doc.data());
-        
-        // Assuming 20 awards, so total votes / 20 is the number of voters.
-        // A better approach would be to have a separate collection for voters.
-        setTotalVoters(votesSnapshot.size / 20);
+        const uniqueVoters = new Set(votes.map(vote => vote.voter));
+        setTotalVoters(uniqueVoters.size);
 
         const voteCounts = votes.reduce((acc, vote) => {
           const { awardTitle, votedFor } = vote;
-          if (!acc[awardTitle]) {
-            acc[awardTitle] = {};
-          }
-          if (!acc[awardTitle][votedFor]) {
-            acc[awardTitle][votedFor] = 0;
-          }
+          if (!acc[awardTitle]) acc[awardTitle] = {};
+          if (!acc[awardTitle][votedFor]) acc[awardTitle][votedFor] = 0;
           acc[awardTitle][votedFor]++;
           return acc;
         }, {});
 
         for (const awardTitle in voteCounts) {
-          const sortedVotes = Object.entries(voteCounts[awardTitle])
-            .sort(([, a], [, b]) => b - a);
+          const sortedVotes = Object.entries(voteCounts[awardTitle]).sort(([, a], [, b]) => b - a);
           voteCounts[awardTitle] = sortedVotes;
         }
-
         setResults(voteCounts);
+
+        // Fetch Final Votes
+        const finalVotesSnapshot = await getDocs(collection(db, "final_votes"));
+        const finalVotesData = finalVotesSnapshot.docs.map(doc => doc.data());
+
+        const finalVoteCounts = finalVotesData.reduce((acc, vote) => {
+            const { awardTitle, votedFor } = vote;
+            if (!acc[awardTitle]) acc[awardTitle] = {};
+            if (!acc[awardTitle][votedFor]) acc[awardTitle][votedFor] = 0;
+            acc[awardTitle][votedFor]++;
+            return acc;
+        }, {});
+
+        for (const awardTitle in finalVoteCounts) {
+            const sortedVotes = Object.entries(finalVoteCounts[awardTitle]).sort(([, a], [, b]) => b - a);
+            finalVoteCounts[awardTitle] = sortedVotes;
+        }
+        setFinalResults(finalVoteCounts);
+
+
+        // Fetch Questions
+        const questionsSnapshot = await getDocs(collection(db, "quiz"));
+        setQuestions(questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Fetch Scores
+        const scoresSnapshot = await getDocs(collection(db, "scores"));
+        setScores(scoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
       } catch (error) {
-        console.error("Error fetching votes: ", error);
+        console.error("Error fetching data: ", error);
       } finally {
         setIsLoading(false);
       }
     };
-
-    const fetchQuestions = async () => {
-      const questionsSnapshot = await getDocs(collection(db, "quiz"));
-      setQuestions(questionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    };
-
-    const fetchScores = async () => {
-        const scoresSnapshot = await getDocs(collection(db, "scores"));
-        setScores(scoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }
     
-    fetchStatus();
-    fetchVotes();
-    fetchQuestions();
-    fetchScores();
+    fetchData();
   }, []);
 
   const handleQuestionChange = (e) => {
@@ -181,7 +189,7 @@ function AdminDashboard({ onBack }) {
             </tr>
           </thead>
           <tbody>
-            {scores.map(score => (
+            {scores.sort((a, b) => b.score - a.score).map(score => (
               <tr key={score.id}>
                 <td>{score.name}</td>
                 <td>{score.score}</td>
@@ -191,8 +199,36 @@ function AdminDashboard({ onBack }) {
         </table>
       </div>
 
+      {/* Final Polling Results */}
       <div className="result-card">
-        <h3>Polling Results</h3>
+        <h3>Final Polling Results</h3>
+        {isLoading ? (
+          <p>Loading results...</p>
+        ) : (
+          <>
+            {Object.keys(finalResults).length === 0 ? <p>No final votes have been submitted yet.</p> :
+            Object.entries(finalResults).map(([awardTitle, votes], index) => {
+              return (
+                <div key={index} className="result-card">
+                  <h4>{awardTitle}</h4>
+                  <ul>
+                    {votes.map(([name, count], voteIndex) => (
+                      <li key={name} style={voteIndex === 0 ? { backgroundColor: 'gold' } : {}}>
+                        <span>{name}</span>
+                        <span>{count} vote(s)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+
+      {/* Initial Polling Results */}
+      <div className="result-card">
+        <h3>Initial Polling Results (Top 5)</h3>
         {isLoading ? (
           <p>Loading results...</p>
         ) : (
@@ -204,8 +240,8 @@ function AdminDashboard({ onBack }) {
                 <div key={index} className="result-card">
                   <h4>{awardTitle}</h4>
                   <ul>
-                    {votes.map(([name, count], voteIndex) => (
-                      <li key={name} style={voteIndex < 5 ? { backgroundColor: 'gold' } : {}}>
+                    {votes.slice(0, 5).map(([name, count], voteIndex) => (
+                      <li key={name}>
                         <span>{name}</span>
                         <span>{count} vote(s)</span>
                       </li>
