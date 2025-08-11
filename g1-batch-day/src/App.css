@@ -13,6 +13,29 @@ body {
   text-align: center;
 }
 
+/* Additions for VoterLogPage table */
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.log-table th,
+.log-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.log-table th {
+  background-color: #f7fafc;
+  font-weight: 600;
+}
+
+.log-table tr:nth-child(even) {
+  background-color: #fdfdff;
+}
+
 .App-header {
   background-color: #f7f8fa;
   min-height: 100vh;

@@ -50,11 +50,11 @@ function VoterLogPage({ onBack }) {
       // Sort votes within each award category
       for (const awardTitle in groupedVotes) {
         groupedVotes[awardTitle].sort((a, b) => {
-          // Sort first by the person voted for, then by the voter
-          if (a.votedFor < b.votedFor) return -1;
-          if (a.votedFor > b.votedFor) return 1;
+          // Sort first by the voter, then by the person voted for
           if (a.voter < b.voter) return -1;
           if (a.voter > b.voter) return 1;
+          if (a.votedFor < b.votedFor) return -1;
+          if (a.votedFor > b.votedFor) return 1;
           return 0;
         });
       }
@@ -63,6 +63,15 @@ function VoterLogPage({ onBack }) {
 
     fetchVoteLogs();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <button onClick={onBack} className="back-button">← Back to Home</button>
+        <h1>Loading Voter Logs...</h1>
+      </div>
+    );
+  }
 
   // Helper component to render a log table
   const renderLogTable = (logData) => {
@@ -73,20 +82,20 @@ function VoterLogPage({ onBack }) {
     }
 
     return sortedAwards.map(awardTitle => (
-      <div key={awardTitle} style={{ marginBottom: '2rem' }}>
+      <div key={awardTitle} className="result-card">
         <h4>{awardTitle}</h4>
         <table className="log-table">
           <thead>
             <tr>
-              <th>Voted For</th>
               <th>Voted By</th>
+              <th>Voted For</th>
             </tr>
           </thead>
           <tbody>
             {logData[awardTitle].map((vote, index) => (
               <tr key={index}>
-                <td>{vote.votedFor}</td>
                 <td>{vote.voter}</td>
+                <td>{vote.votedFor}</td>
               </tr>
             ))}
           </tbody>
@@ -94,15 +103,6 @@ function VoterLogPage({ onBack }) {
       </div>
     ));
   };
-
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <button onClick={onBack} className="back-button">← Back to Home</button>
-        <h1>Loading Voter Logs...</h1>
-      </div>
-    );
-  }
 
   return (
     <div className="dashboard-container">
